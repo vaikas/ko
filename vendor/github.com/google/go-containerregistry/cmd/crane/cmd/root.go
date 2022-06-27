@@ -38,8 +38,8 @@ var Root = New(use, short, []crane.Option{})
 func New(use, short string, options []crane.Option) *cobra.Command {
 	verbose := false
 	insecure := false
+	ndlayers := false
 	platform := &platformValue{}
-	var osVersion string
 
 	root := &cobra.Command{
 		Use:               use,
@@ -56,6 +56,9 @@ func New(use, short string, options []crane.Option) *cobra.Command {
 			if insecure {
 				options = append(options, crane.Insecure)
 			}
+			if ndlayers {
+				options = append(options, crane.WithNondistributable())
+			}
 			if Version != "" {
 				binary := "crane"
 				if len(os.Args[0]) != 0 {
@@ -64,14 +67,12 @@ func New(use, short string, options []crane.Option) *cobra.Command {
 				options = append(options, crane.WithUserAgent(fmt.Sprintf("%s/%s", binary, Version)))
 			}
 
-			if osVersion != "" {
-				platform.platform.OSVersion = osVersion
-			}
-
 			options = append(options, crane.WithPlatform(platform.platform))
 
 			transport := remote.DefaultTransport.Clone()
-			transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecure}
+			transport.TLSClientConfig = &tls.Config{
+				InsecureSkipVerify: insecure, //nolint: gosec
+			}
 
 			var rt http.RoundTripper = transport
 			// Add any http headers if they are set in the config file.
@@ -116,8 +117,8 @@ func New(use, short string, options []crane.Option) *cobra.Command {
 
 	root.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable debug logs")
 	root.PersistentFlags().BoolVar(&insecure, "insecure", false, "Allow image references to be fetched without TLS")
-	root.PersistentFlags().Var(platform, "platform", "Specifies the platform in the form os/arch[/variant] (e.g. linux/amd64).")
-	root.PersistentFlags().StringVar(&osVersion, "osversion", "", "Specifies the OS version.")
+	root.PersistentFlags().BoolVar(&ndlayers, "allow-nondistributable-artifacts", false, "Allow pushing non-distributable (foreign) layers")
+	root.PersistentFlags().Var(platform, "platform", "Specifies the platform in the form os/arch[/variant][:osversion] (e.g. linux/amd64).")
 
 	return root
 }
