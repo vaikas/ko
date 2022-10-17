@@ -8,7 +8,7 @@ require (
 	github.com/dprotaso/go-yit v0.0.0-20191028211022-135eb7262960
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/go-training/helloworld v0.0.0-20200225145412-ba5f4379d78b
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.8
 	github.com/google/go-containerregistry v0.7.0
 	github.com/mattmoor/dep-notify v0.0.0-20190205035814-a45dec370a17
 	github.com/mattn/go-isatty v0.0.13 // indirect
@@ -17,9 +17,9 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.9.0
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/tools v0.1.8-0.20211015140901-98f6e0395b11
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	k8s.io/apimachinery v0.22.4
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
+	golang.org/x/tools v0.1.12
+	gopkg.in/yaml.v3 v3.0.1
+	k8s.io/apimachinery v0.25.3
 	sigs.k8s.io/kind v0.11.1
 )
