@@ -244,6 +244,7 @@ func extract(img v1.Image, w io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("retrieving image layers: %w", err)
 	}
+
 	// we iterate through the layers in reverse order because it makes handling
 	// whiteout layers more efficient, since we can just keep track of the removed
 	// files as we see .wh. layers and ignore those in previous layers.
@@ -267,6 +268,10 @@ func extract(img v1.Image, w io.Writer) error {
 			// Some tools prepend everything with "./", so if we don't Clean the
 			// name, we may have duplicate entries, which angers tar-split.
 			header.Name = filepath.Clean(header.Name)
+			// force PAX format to remove Name/Linkname length limit of 100 characters
+			// required by USTAR and to not depend on internal tar package guess which
+			// prefers USTAR over PAX
+			header.Format = tar.FormatPAX
 
 			basename := filepath.Base(header.Name)
 			dirname := filepath.Dir(header.Name)
@@ -297,9 +302,11 @@ func extract(img v1.Image, w io.Writer) error {
 			// any entries with a matching (or child) name
 			fileMap[name] = tombstone || !(header.Typeflag == tar.TypeDir)
 			if !tombstone {
-				tarWriter.WriteHeader(header)
+				if err := tarWriter.WriteHeader(header); err != nil {
+					return err
+				}
 				if header.Size > 0 {
-					if _, err := io.Copy(tarWriter, tarReader); err != nil {
+					if _, err := io.CopyN(tarWriter, tarReader, header.Size); err != nil {
 						return err
 					}
 				}
@@ -409,7 +416,8 @@ func layerTime(layer v1.Layer, t time.Time) (v1.Layer, error) {
 		}
 
 		if header.Typeflag == tar.TypeReg {
-			if _, err = io.Copy(tarWriter, tarReader); err != nil {
+			// TODO(#1168): This should be lazy, and not buffer the entire layer contents.
+			if _, err = io.CopyN(tarWriter, tarReader, header.Size); err != nil {
 				return nil, fmt.Errorf("writing layer file: %w", err)
 			}
 		}
